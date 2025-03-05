@@ -1,8 +1,12 @@
 import cv2
 import numpy as np
+from ultralytics import YOLO
 
-# webcam
-cap = cv2.VideoCapture(0)  # 0 for default webcam
+# load pretrained yolo11 model
+model = YOLO("yolo11n.pt")
+
+# webcam, 0 for default
+cap = cv2.VideoCapture(0) 
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -15,5 +19,6 @@ while cap.isOpened():
     # q to quit
     if cv2.waitKey(1) & 0xFF == ord("q"):  
         break
+
 cap.release()
 cv2.destroyAllWindows()
