@@ -13,3 +13,7 @@ focus areas.
 TODO
 
 ## implementation
+
+## resources used
+- YOLO for face detection: https://github.com/akanametov/yolo-face?tab=readme-ov-file
+- Pre-trained emotion detection model: https://github.com/akanametov/yolo-face 
