@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 import time
+import datetime
 from ultralytics import YOLO
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
-
+     
 # load pretrained models
 face_model = YOLO("yolov11n-face.pt", verbose=False)
 emotion_model = Sequential()
@@ -15,13 +16,11 @@ emotion_model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=
 emotion_model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
 emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
 emotion_model.add(Dropout(0.25))
-
 emotion_model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
 emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
 emotion_model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
 emotion_model.add(MaxPooling2D(pool_size=(2, 2)))
 emotion_model.add(Dropout(0.25))
-
 emotion_model.add(Flatten())
 emotion_model.add(Dense(1024, activation='relu'))
 emotion_model.add(Dropout(0.5))
@@ -34,14 +33,23 @@ emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutra
 cap = cv2.VideoCapture(0) 
 
 # Data Structures
-
 baseline_stats = {
     'negative_faces': [],
-    'baseline_negative_avg': 0,
+    'baseline_negative_avg': -1,
     'start_time': time.time()
 }
 BASELINE_DURATION = 10 # 1 minute for calibration
 
+# rolling window avg
+rolling_stats = {
+     'rolling_negative_faces': []
+}
+WINDOW_SIZE = 10
+
+# map timestamp to avg confusion level
+timestamp_to_avg = {}
+
+# run emotion analysis
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
@@ -74,13 +82,37 @@ while cap.isOpened():
             if (time.time() - baseline_stats['start_time'] < BASELINE_DURATION):
                 if (max_val in {0, 1, 2, 5}):
                     baseline_stats['negative_faces'].append(confidence)
+            elif (baseline_stats['baseline_negative_avg'] == -1):
+                    print(baseline_stats['negative_faces'])
+                    baseline_stats['baseline_negative_avg'] = np.nan_to_num(np.mean(baseline_stats['negative_faces']))
+                    
+                    print("CALIBRATED")
             else: 
-                # TODO add bool
-                print(baseline_stats['negative_faces'])
-                # TODO account for divide by 0
-                baseline_stats['baseline_negative_avg'] = np.mean(baseline_stats['negative_faces'])
-                print("^_^")
-                print( baseline_stats['baseline_negative_avg'])
+                 # Compare rolling window of emotions against baseline
+                if (max_val in {0, 1, 2, 5}):
+                    rolling_stats['rolling_negative_faces'].append(confidence)
+                    if len(rolling_stats['rolling_negative_faces']) > WINDOW_SIZE:
+                        # map curr HH:MM to avg emotion sample
+                        timestamp = datetime.datetime.now()
+                        truncated_timestamp = timestamp.replace(second=0, microsecond=0)
+
+                        sampled_mean = np.nan_to_num(np.mean(rolling_stats['rolling_negative_faces']))
+                        std = np.std(baseline_stats['negative_faces'])
+
+                        print(f"baseline: {baseline_stats['baseline_negative_avg']}, sampled mean: {sampled_mean}, std: {std}")
+
+                        timestamp_to_avg[truncated_timestamp] = sampled_mean
+
+                        rolling_stats['rolling_negative_faces'].clear()
+
+                        if (sampled_mean > baseline_stats['baseline_negative_avg'] + 1.5 * std):
+                            # spike detected, TODO 
+                            print("SPIKE DETECTED")
+
+                            # look up lecture content, trigger gpt pipeline, send data to unity
+
+                        print("ovo")
+                        print(f"{truncated_timestamp}: {timestamp_to_avg[truncated_timestamp]}")
 
             cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
