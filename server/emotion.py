@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 from ultralytics import YOLO
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten
@@ -32,6 +33,15 @@ emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutra
 # webcam, 0 for default
 cap = cv2.VideoCapture(0) 
 
+# Data Structures
+
+baseline_stats = {
+    'negative_faces': [],
+    'baseline_negative_avg': 0,
+    'start_time': time.time()
+}
+BASELINE_DURATION = 10 # 1 minute for calibration
+
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
@@ -57,6 +67,20 @@ while cap.isOpened():
             pred = emotion_model.predict(face_reshaped, verbose=0)
             max_val = int(np.argmax(pred))
             emotion = emotion_dict[max_val]
+            # confidence = intensity of the emotion
+            confidence = float(np.max(pred))
+
+            # CALIBRATION
+            if (time.time() - baseline_stats['start_time'] < BASELINE_DURATION):
+                if (max_val in {0, 1, 2, 5}):
+                    baseline_stats['negative_faces'].append(confidence)
+            else: 
+                # TODO add bool
+                print(baseline_stats['negative_faces'])
+                # TODO account for divide by 0
+                baseline_stats['baseline_negative_avg'] = np.mean(baseline_stats['negative_faces'])
+                print("^_^")
+                print( baseline_stats['baseline_negative_avg'])
 
             cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
