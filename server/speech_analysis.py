@@ -1,37 +1,124 @@
-import whisper
 import pyaudio
-import numpy as np
 import wave
+import numpy as np
+import whisper
+from faster_whisper import WhisperModel
+import queue
+import datetime
+import re
+import threading
+import global_vars
 
-model = whisper.load_model("base") 
+# AUDIO SETTINGS
+MAX_AUDIO_QUEUE = 6 # max length audio data to process together
+chunk = 1024  # Record in chunks of 1024 samples
+sample_format = pyaudio.paInt16  # 16 bits per sample
+channels = 1
+rate = 16000  # samples per second to record
+# seconds = 3
+filename = "output.wav"
 
-def record_audio(filename="lecture.wav", duration=10, sample_rate=16000):
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=sample_rate, input=True, frames_per_buffer=1024)
-    
-    frames = []
-    print("Recording...")
-    
-    for _ in range(0, int(sample_rate / 1024 * duration)):
-        data = stream.read(1024)
-        frames.append(data)
-    
-    print("Finished recording.")
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+# Whisper settings
+WHISPER_LANGUAGE = "en"
+WHISPER_THREADS = 4
 
-    with wave.open(filename, 'wb') as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
-        wf.setframerate(sample_rate)
-        wf.writeframes(b''.join(frames))
+# hold 1-second audio chunks for processing
+audio_queue = queue.Queue()
+limited_queue = queue.Queue(maxsize=MAX_AUDIO_QUEUE)
+
+whisper = WhisperModel("base", device="cpu", compute_type="int8", cpu_threads=WHISPER_THREADS, download_root="./models")
+
+def get_audio():
+    # Record audio and place in queue 
+    print('Recording')
+    p = pyaudio.PyAudio() 
+
+    stream = p.open(format=sample_format,
+                    channels=channels,
+                    rate=rate,
+                    frames_per_buffer=chunk,
+                    input=True)
+
+    print("-" * 50)
+    print("Microphone initialized")
+    print("-" * 50)
+
+    while True:
+        audio_data = b""
+        for _ in range(1):
+            curr_chunk = stream.read(rate) # length of audio data to read
+            audio_data += curr_chunk
+        audio_queue.put(audio_data)
 
 def transcribe_audio():
-    result = model.transcribe("lecture.wav")
-    print("Transcription:", result["text"])
-    return result["text"]
+    print("transcribing")
+    # Get from queue and parse
+    try:
+        while True:
+            if limited_queue.qsize() >= MAX_AUDIO_QUEUE:
+                with limited_queue.mutex:
+                    limited_queue.queue.clear()
+                    print()
+            audio_data = audio_queue.get()
 
-# Run the pipeline
-record_audio(duration=5) 
-transcription = transcribe_audio()
+            limited_queue.put(audio_data)
+
+            audio_to_process = b""
+            for i in range(limited_queue.qsize()):
+                # don't remove items from queue here
+                audio_to_process += limited_queue.queue[i] 
+            
+            audio_array : np.ndarray = np.frombuffer(audio_to_process, np.int16).astype(np.float32) / 255.0
+            
+            segments, _ = whisper.transcribe(audio_array,
+                                                language=WHISPER_LANGUAGE,
+                                                beam_size=5,
+                                                vad_filter=True,
+                                                vad_parameters=dict(min_silence_duration_ms=1000))
+            segments = [s.text for s in segments] 
+
+            transcription = " ".join(segments)
+            # remove non-speech, which is in () or []
+            transcription = re.sub(r"\[.*\]", "", transcription)
+            transcription = re.sub(r"\(.*\)", "", transcription)
+
+            print(f"{transcription}")
+
+            timestamp = datetime.datetime.now()
+            truncated_timestamp = timestamp.replace(second=0, microsecond=0)
+
+            global_vars.timestamp_to_lecture[truncated_timestamp] = transcription
+            
+            # for multithreading, signals that enqueued task wsas processed
+            audio_queue.task_done()
+    except KeyboardInterrupt:
+        print("quitting transcribe")
+
+if __name__ == "__main__":
+    audio_thread = threading.Thread(target=get_audio)
+    audio_thread.start() 
+
+    transcription_thread = threading.Thread(target=transcribe_audio)
+    transcription_thread.start()
+    
+    try:
+        audio_thread.join()
+        transcription_thread.join()
+    except KeyboardInterrupt:
+        print("Quitting")
+
+# Stop and close the stream 
+# stream.stop_stream()
+# stream.close()
+# # Terminate the PortAudio interface
+# p.terminate()
+
+# print('Finished recording')
+
+# # Save the recorded data as a WAV file
+# wf = wave.open(filename, 'wb')
+# wf.setnchannels(channels)
+# wf.setsampwidth(p.get_sample_size(sample_format))
+# wf.setframerate(fs)
+# wf.writeframes(b''.join(frames))
+# wf.close()

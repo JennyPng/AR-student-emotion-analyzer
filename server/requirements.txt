@@ -8,6 +8,7 @@ keras
 # Audio
 pyaudio 
 openai-whisper
+faster-whisper
 imageio-ffmpeg
 
 # YOLOv5 requirements

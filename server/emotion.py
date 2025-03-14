@@ -7,6 +7,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
+import global_vars
      
 # load pretrained models
 face_model = YOLO("yolov11n-face.pt", verbose=False)
@@ -45,9 +46,6 @@ rolling_stats = {
      'rolling_negative_faces': []
 }
 WINDOW_SIZE = 10
-
-# map timestamp to avg confusion level
-timestamp_to_avg = {}
 
 # run emotion analysis
 while cap.isOpened():
@@ -101,7 +99,7 @@ while cap.isOpened():
 
                         print(f"baseline: {baseline_stats['baseline_negative_avg']}, sampled mean: {sampled_mean}, std: {std}")
 
-                        timestamp_to_avg[truncated_timestamp] = sampled_mean
+                        global_vars.timestamp_to_avg[truncated_timestamp] = sampled_mean
 
                         rolling_stats['rolling_negative_faces'].clear()
 
@@ -112,7 +110,7 @@ while cap.isOpened():
                             # look up lecture content, trigger gpt pipeline, send data to unity
 
                         print("ovo")
-                        print(f"{truncated_timestamp}: {timestamp_to_avg[truncated_timestamp]}")
+                        print(f"{truncated_timestamp}: {global_vars.timestamp_to_avg[truncated_timestamp]}")
 
             cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 

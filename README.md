@@ -17,3 +17,5 @@ TODO
 ## resources used
 - YOLO for face detection: https://github.com/akanametov/yolo-face?tab=readme-ov-file
 - Pre-trained emotion detection model: https://github.com/atulapra/Emotion-detection
+- PyAudio tutorial: https://realpython.com/playing-and-recording-sound-python/#recording-audio 
+- Live transcription with Whisper: https://github.com/gaborvecsei/whisper-live-transcription/blob/main/standalone-poc/live-transcribe.py
