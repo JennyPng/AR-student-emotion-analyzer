@@ -80,6 +80,8 @@ while cap.isOpened():
             if (time.time() - baseline_stats['start_time'] < BASELINE_DURATION):
                 if (max_val in {0, 1, 2, 5}):
                     baseline_stats['negative_faces'].append(confidence)
+                else:
+                    baseline_stats['negative_faces'].append(0) # positive emotions
             elif (baseline_stats['baseline_negative_avg'] == -1):
                     print(baseline_stats['negative_faces'])
                     baseline_stats['baseline_negative_avg'] = np.nan_to_num(np.mean(baseline_stats['negative_faces']))
@@ -89,29 +91,31 @@ while cap.isOpened():
                  # Compare rolling window of emotions against baseline
                 if (max_val in {0, 1, 2, 5}):
                     rolling_stats['rolling_negative_faces'].append(confidence)
-                    if len(rolling_stats['rolling_negative_faces']) > WINDOW_SIZE:
-                        # map curr HH:MM to avg emotion sample
-                        timestamp = datetime.datetime.now()
-                        truncated_timestamp = timestamp.replace(second=0, microsecond=0)
+                else: 
+                    baseline_stats['negative_faces'].append(0) # positive emotions
+                if len(rolling_stats['rolling_negative_faces']) > WINDOW_SIZE:
+                    # map curr HH:MM to avg emotion sample
+                    timestamp = datetime.datetime.now()
+                    truncated_timestamp = timestamp.replace(microsecond=0)
 
-                        sampled_mean = np.nan_to_num(np.mean(rolling_stats['rolling_negative_faces']))
-                        std = np.std(baseline_stats['negative_faces'])
+                    sampled_mean = np.nan_to_num(np.mean(rolling_stats['rolling_negative_faces']))
+                    std = np.std(baseline_stats['negative_faces'])
 
-                        print(f"baseline: {baseline_stats['baseline_negative_avg']}, sampled mean: {sampled_mean}, std: {std}")
+                    print(f"baseline: {baseline_stats['baseline_negative_avg']}, sampled mean: {sampled_mean}, std: {std}")
 
-                        global_vars.timestamp_to_avg[truncated_timestamp] = sampled_mean
+                    # TODO PANDAS
+                    global_vars.confusion_df.loc[truncated_timestamp] = [sampled_mean]
+                    print("-" * 80)
+                    print(global_vars.confusion_df)
+                    print("-" * 80)
 
-                        rolling_stats['rolling_negative_faces'].clear()
+                    rolling_stats['rolling_negative_faces'].clear()
 
-                        if (sampled_mean > baseline_stats['baseline_negative_avg'] + 1.5 * std):
-                            # spike detected, TODO 
-                            print("SPIKE DETECTED")
+                    if (sampled_mean > baseline_stats['baseline_negative_avg'] + 1.5 * std):
+                        # spike detected, TODO 
+                        print("SPIKE DETECTED")
 
-                            # look up lecture content, trigger gpt pipeline, send data to unity
-
-                        print("ovo")
-                        print(f"{truncated_timestamp}: {global_vars.timestamp_to_avg[truncated_timestamp]}")
-
+                        # look up lecture content, trigger gpt pipeline, send data to unity
             cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
     # display webcam

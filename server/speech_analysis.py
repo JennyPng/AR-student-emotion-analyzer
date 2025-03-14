@@ -85,10 +85,11 @@ def transcribe_audio():
             print(f"{transcription}")
 
             timestamp = datetime.datetime.now()
-            truncated_timestamp = timestamp.replace(second=0, microsecond=0)
+            truncated_timestamp = timestamp.replace(microsecond=0)
 
-            global_vars.timestamp_to_lecture[truncated_timestamp] = transcription
-            
+            # TODO PANDAS
+            global_vars.lecture_df[truncated_timestamp] = [transcription]
+
             # for multithreading, signals that enqueued task wsas processed
             audio_queue.task_done()
     except KeyboardInterrupt:

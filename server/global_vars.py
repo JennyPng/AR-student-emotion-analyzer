@@ -1,6 +1,7 @@
-# TODO change to pandas series dataframe
+import pandas as pd
 
 # map timestamp to avg confusion level
-timestamp_to_avg = {}
+confusion_df = pd.DataFrame(columns=['confusion_level'])
+
 # map timestamp to chunk of lecture transcript
-timestamp_to_lecture = {}
+lecture_df = pd.DataFrame(columns=['transcript_chunk'])
