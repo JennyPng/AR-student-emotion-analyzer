@@ -46,6 +46,22 @@ rolling_stats = {
 }
 WINDOW_SIZE = 10
 
+def get_confusing_topics(timestamp):
+    spike_timestamp = global_vars.pd.Timestamp(timestamp)
+                            
+    start_time = spike_timestamp - timedelta(minutes=5)
+    end_time = spike_timestamp
+
+    # Get the relevant lecture content
+    relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
+    relevant_lecture_content = ' '.join(relevant_lecture_content['transcript_chunk'].tolist())
+
+    # look up lecture content, trigger gpt pipeline, send data to unity
+    gpt_response = ai.clarify_lecture(relevant_lecture_content)
+    print(gpt_response)
+
+    return gpt_response
+
 def analyze_emotions():
     # webcam, 0 for default
     cap = cv2.VideoCapture(0) 
@@ -88,7 +104,7 @@ def analyze_emotions():
                         print(baseline_stats['negative_faces'])
                         baseline_stats['baseline_negative_avg'] = np.nan_to_num(np.mean(baseline_stats['negative_faces']))
                         
-                        print("CALIBRATED")
+                        print(f"CALIBRATED, baseline: {baseline_stats['baseline_negative_avg']}")
                 else: 
                     # Compare rolling window of emotions against baseline
                     if (max_val in {0, 1, 2, 5}):
@@ -117,17 +133,7 @@ def analyze_emotions():
                             # spike detected, get lecture content from past 30 seconds
                             print("SPIKE DETECTED")
 
-                            spike_timestamp = global_vars.pd.Timestamp(truncated_timestamp)
-                            
-                            start_time = spike_timestamp - timedelta(seconds=30)
-                            end_time = spike_timestamp
-
-                            # Get the relevant lecture content
-                            relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
-                            relevant_lecture_content = ' '.join(relevant_lecture_content['transcript_chunk'].tolist())
-
-                            # look up lecture content, trigger gpt pipeline, send data to unity
-                            ai.clarify_lecture(relevant_lecture_content)
+                            get_confusing_topics(truncated_timestamp)
 
                 cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
