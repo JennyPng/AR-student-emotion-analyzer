@@ -121,7 +121,6 @@ def analyze_emotions():
 
                         print(f"baseline: {baseline_stats['baseline_negative_avg']}, sampled mean: {sampled_mean}, std: {std}")
 
-                        # TODO PANDAS
                         global_vars.confusion_df.loc[truncated_timestamp] = [sampled_mean]
                         print("-" * 80)
                         print(global_vars.confusion_df)

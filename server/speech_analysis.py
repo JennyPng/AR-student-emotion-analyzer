@@ -57,14 +57,7 @@ def transcribe_audio():
     # Get from queue and parse
     try:
         while True:
-            # if limited_queue.qsize() >= MAX_AUDIO_QUEUE:
-            #     with limited_queue.mutex:
-            #         limited_queue.queue.clear()
-            #         print()
             if audio_queue.qsize() >= MAX_AUDIO_QUEUE: # if we have num seconds of audio, transcribe it and store it
-                # audio_data = audio_queue.get()
-                # limited_queue.put(audio_data)
-
                 audio_to_process = b""
                 qsize = audio_queue.qsize()
                 for i in range(qsize):
@@ -84,8 +77,6 @@ def transcribe_audio():
                 transcription = re.sub(r"\[.*\]", "", transcription)
                 transcription = re.sub(r"\(.*\)", "", transcription)
 
-                # print(f"{transcription}")
-
                 timestamp = datetime.datetime.now()
                 truncated_timestamp = timestamp.replace(microsecond=0)
 
@@ -95,53 +86,6 @@ def transcribe_audio():
                 audio_queue.task_done()
     except KeyboardInterrupt:
         print("quitting transcribe")
-
-# def transcribe_audio():
-#     print("transcribing")
-#     # Get from queue and parse
-#     try:
-#         while True:
-#             if limited_queue.qsize() >= MAX_AUDIO_QUEUE:
-#                 with limited_queue.mutex:
-#                     limited_queue.queue.clear()
-#                     print()
-#             if audio_queue.qsize() >= MAX_AUDIO_QUEUE:
-#                 audio_data = audio_queue.get()
-
-#                 limited_queue.put(audio_data)
-
-#                 audio_to_process = b""
-#                 for i in range(limited_queue.qsize()):
-#                     # don't remove items from queue here
-#                     audio_to_process += limited_queue.queue[i] 
-                
-#                 audio_array : np.ndarray = np.frombuffer(audio_to_process, np.int16).astype(np.float32) / 255.0
-                
-#                 segments, _ = whisper.transcribe(audio_array,
-#                                                     language=WHISPER_LANGUAGE,
-#                                                     beam_size=5,
-#                                                     vad_filter=True,
-#                                                     vad_parameters=dict(min_silence_duration_ms=1000))
-#                 segments = [s.text for s in segments] 
-
-#                 transcription = " ".join(segments)
-#                 # remove non-speech, which is in () or []
-#                 transcription = re.sub(r"\[.*\]", "", transcription)
-#                 transcription = re.sub(r"\(.*\)", "", transcription)
-
-#                 print(f"{transcription}")
-
-#                 timestamp = datetime.datetime.now()
-#                 truncated_timestamp = timestamp.replace(microsecond=0)
-
-#                 # TODO PANDAS
-#                 global_vars.lecture_df.loc[truncated_timestamp] = [transcription]
-#                 print(global_vars.lecture_df)
-
-#                 # for multithreading, signals that enqueued task wsas processed
-#                 audio_queue.task_done()
-#     except KeyboardInterrupt:
-#         print("quitting transcribe")
 
 if __name__ == "__main__":
     emotion_thread = threading.Thread(target=emotion.analyze_emotions)
@@ -159,19 +103,4 @@ if __name__ == "__main__":
         emotion_thread.join()
     except KeyboardInterrupt:
         print("Quitting")
-
-# Stop and close the stream 
-# stream.stop_stream()
-# stream.close()
-# # Terminate the PortAudio interface
-# p.terminate()
-
-# print('Finished recording')
-
-# # Save the recorded data as a WAV file
-# wf = wave.open(filename, 'wb')
-# wf.setnchannels(channels)
-# wf.setsampwidth(p.get_sample_size(sample_format))
-# wf.setframerate(fs)
-# wf.writeframes(b''.join(frames))
-# wf.close()
+        
