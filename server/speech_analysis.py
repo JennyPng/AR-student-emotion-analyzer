@@ -84,13 +84,12 @@ def transcribe_audio():
                 transcription = re.sub(r"\[.*\]", "", transcription)
                 transcription = re.sub(r"\(.*\)", "", transcription)
 
-                print(f"{transcription}")
+                # print(f"{transcription}")
 
                 timestamp = datetime.datetime.now()
                 truncated_timestamp = timestamp.replace(microsecond=0)
 
                 global_vars.lecture_df.loc[truncated_timestamp] = [transcription]
-                # print(global_vars.lecture_df.loc[truncated_timestamp])
 
                 # for multithreading, signals that enqueued task was processed
                 audio_queue.task_done()

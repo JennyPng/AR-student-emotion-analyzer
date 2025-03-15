@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 import time
-import datetime
+from datetime import datetime, timedelta
+
 from ultralytics import YOLO
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten
@@ -10,7 +11,7 @@ from tensorflow.keras.layers import MaxPooling2D
 import global_vars
      
 # load pretrained models
-face_model = YOLO("yolov11n-face.pt", verbose=False)
+face_model = YOLO("yolov11n-face.pt")
 emotion_model = Sequential()
 
 emotion_model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
@@ -70,7 +71,7 @@ def analyze_emotions():
                 face_reshaped = np.expand_dims(np.expand_dims(face_normalized, -1), 0)
 
                 # prediction
-                pred = emotion_model.predict(face_reshaped, verbose=0)
+                pred = emotion_model.predict(face_reshaped, verbose=False)
                 max_val = int(np.argmax(pred))
                 emotion = emotion_dict[max_val]
                 # confidence = intensity of the emotion
@@ -95,7 +96,7 @@ def analyze_emotions():
                         baseline_stats['negative_faces'].append(0) # positive emotions
                     if len(rolling_stats['rolling_negative_faces']) > WINDOW_SIZE:
                         # map curr HH:MM to avg emotion sample
-                        timestamp = datetime.datetime.now()
+                        timestamp = datetime.now()
                         truncated_timestamp = timestamp.replace(microsecond=0)
 
                         sampled_mean = np.nan_to_num(np.mean(rolling_stats['rolling_negative_faces']))
@@ -112,8 +113,17 @@ def analyze_emotions():
                         rolling_stats['rolling_negative_faces'].clear()
 
                         if (sampled_mean > baseline_stats['baseline_negative_avg'] + 1.5 * std):
-                            # spike detected, TODO 
+                            # spike detected, get lecture content from past 30 seconds
                             print("SPIKE DETECTED")
+
+                            spike_timestamp = global_vars.pd.Timestamp(truncated_timestamp)
+                            
+                            start_time = spike_timestamp - timedelta(seconds=30)
+                            end_time = spike_timestamp
+
+                            # Get the relevant lecture content
+                            relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
+                            print(f"Relevant content: {relevant_lecture_content}")
 
                             # look up lecture content, trigger gpt pipeline, send data to unity
                 cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
@@ -127,3 +137,6 @@ def analyze_emotions():
 
     cap.release()
     cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    analyze_emotions()
