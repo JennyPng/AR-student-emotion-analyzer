@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
 import global_vars
+import ai
      
 # load pretrained models
 face_model = YOLO("yolov11n-face.pt")
@@ -37,7 +38,7 @@ baseline_stats = {
     'baseline_negative_avg': -1,
     'start_time': time.time()
 }
-BASELINE_DURATION = 10 # 1 minute for calibration
+BASELINE_DURATION = 20 # time for calibration
 
 # rolling window avg
 rolling_stats = {
@@ -123,9 +124,11 @@ def analyze_emotions():
 
                             # Get the relevant lecture content
                             relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
-                            print(f"Relevant content: {relevant_lecture_content}")
+                            relevant_lecture_content = ' '.join(relevant_lecture_content['transcript_chunk'].tolist())
 
                             # look up lecture content, trigger gpt pipeline, send data to unity
+                            ai.clarify_lecture(relevant_lecture_content)
+
                 cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
         # display webcam
