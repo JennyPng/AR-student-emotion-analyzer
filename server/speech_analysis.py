@@ -10,7 +10,7 @@ import threading
 import global_vars
 
 # AUDIO SETTINGS
-MAX_AUDIO_QUEUE = 6 # max length audio data to process together
+MAX_AUDIO_QUEUE = 7 # max length audio data to process together
 chunk = 1024  # Record in chunks of 1024 samples
 sample_format = pyaudio.paInt16  # 16 bits per sample
 channels = 1
@@ -55,45 +55,92 @@ def transcribe_audio():
     # Get from queue and parse
     try:
         while True:
-            if limited_queue.qsize() >= MAX_AUDIO_QUEUE:
-                with limited_queue.mutex:
-                    limited_queue.queue.clear()
-                    print()
-            audio_data = audio_queue.get()
+            # if limited_queue.qsize() >= MAX_AUDIO_QUEUE:
+            #     with limited_queue.mutex:
+            #         limited_queue.queue.clear()
+            #         print()
+            if audio_queue.qsize() >= MAX_AUDIO_QUEUE: # if we have num seconds of audio, transcribe it and store it
+                # audio_data = audio_queue.get()
+                # limited_queue.put(audio_data)
 
-            limited_queue.put(audio_data)
+                audio_to_process = b""
+                qsize = audio_queue.qsize()
+                for i in range(qsize):
+                    audio_to_process += audio_queue.get()
+                
+                audio_array : np.ndarray = np.frombuffer(audio_to_process, np.int16).astype(np.float32) / 255.0
+                
+                segments, _ = whisper.transcribe(audio_array,
+                                                    language=WHISPER_LANGUAGE,
+                                                    beam_size=5,
+                                                    vad_filter=True,
+                                                    vad_parameters=dict(min_silence_duration_ms=1000))
+                segments = [s.text for s in segments] 
 
-            audio_to_process = b""
-            for i in range(limited_queue.qsize()):
-                # don't remove items from queue here
-                audio_to_process += limited_queue.queue[i] 
-            
-            audio_array : np.ndarray = np.frombuffer(audio_to_process, np.int16).astype(np.float32) / 255.0
-            
-            segments, _ = whisper.transcribe(audio_array,
-                                                language=WHISPER_LANGUAGE,
-                                                beam_size=5,
-                                                vad_filter=True,
-                                                vad_parameters=dict(min_silence_duration_ms=1000))
-            segments = [s.text for s in segments] 
+                transcription = " ".join(segments)
+                # remove non-speech, which is in () or []
+                transcription = re.sub(r"\[.*\]", "", transcription)
+                transcription = re.sub(r"\(.*\)", "", transcription)
 
-            transcription = " ".join(segments)
-            # remove non-speech, which is in () or []
-            transcription = re.sub(r"\[.*\]", "", transcription)
-            transcription = re.sub(r"\(.*\)", "", transcription)
+                print(f"{transcription}")
 
-            print(f"{transcription}")
+                timestamp = datetime.datetime.now()
+                truncated_timestamp = timestamp.replace(microsecond=0)
 
-            timestamp = datetime.datetime.now()
-            truncated_timestamp = timestamp.replace(microsecond=0)
+                global_vars.lecture_df.loc[truncated_timestamp] = [transcription]
+                # print(global_vars.lecture_df.loc[truncated_timestamp])
 
-            # TODO PANDAS
-            global_vars.lecture_df[truncated_timestamp] = [transcription]
-
-            # for multithreading, signals that enqueued task wsas processed
-            audio_queue.task_done()
+                # for multithreading, signals that enqueued task was processed
+                audio_queue.task_done()
     except KeyboardInterrupt:
         print("quitting transcribe")
+
+# def transcribe_audio():
+#     print("transcribing")
+#     # Get from queue and parse
+#     try:
+#         while True:
+#             if limited_queue.qsize() >= MAX_AUDIO_QUEUE:
+#                 with limited_queue.mutex:
+#                     limited_queue.queue.clear()
+#                     print()
+#             if audio_queue.qsize() >= MAX_AUDIO_QUEUE:
+#                 audio_data = audio_queue.get()
+
+#                 limited_queue.put(audio_data)
+
+#                 audio_to_process = b""
+#                 for i in range(limited_queue.qsize()):
+#                     # don't remove items from queue here
+#                     audio_to_process += limited_queue.queue[i] 
+                
+#                 audio_array : np.ndarray = np.frombuffer(audio_to_process, np.int16).astype(np.float32) / 255.0
+                
+#                 segments, _ = whisper.transcribe(audio_array,
+#                                                     language=WHISPER_LANGUAGE,
+#                                                     beam_size=5,
+#                                                     vad_filter=True,
+#                                                     vad_parameters=dict(min_silence_duration_ms=1000))
+#                 segments = [s.text for s in segments] 
+
+#                 transcription = " ".join(segments)
+#                 # remove non-speech, which is in () or []
+#                 transcription = re.sub(r"\[.*\]", "", transcription)
+#                 transcription = re.sub(r"\(.*\)", "", transcription)
+
+#                 print(f"{transcription}")
+
+#                 timestamp = datetime.datetime.now()
+#                 truncated_timestamp = timestamp.replace(microsecond=0)
+
+#                 # TODO PANDAS
+#                 global_vars.lecture_df.loc[truncated_timestamp] = [transcription]
+#                 print(global_vars.lecture_df)
+
+#                 # for multithreading, signals that enqueued task wsas processed
+#                 audio_queue.task_done()
+#     except KeyboardInterrupt:
+#         print("quitting transcribe")
 
 if __name__ == "__main__":
     audio_thread = threading.Thread(target=get_audio)
