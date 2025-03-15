@@ -9,6 +9,8 @@ import re
 import threading
 import global_vars
 
+import emotion
+
 # AUDIO SETTINGS
 MAX_AUDIO_QUEUE = 7 # max length audio data to process together
 chunk = 1024  # Record in chunks of 1024 samples
@@ -143,6 +145,9 @@ def transcribe_audio():
 #         print("quitting transcribe")
 
 if __name__ == "__main__":
+    emotion_thread = threading.Thread(target=emotion.analyze_emotions)
+    emotion_thread.start()
+
     audio_thread = threading.Thread(target=get_audio)
     audio_thread.start() 
 
@@ -152,6 +157,7 @@ if __name__ == "__main__":
     try:
         audio_thread.join()
         transcription_thread.join()
+        emotion_thread.join()
     except KeyboardInterrupt:
         print("Quitting")
 
