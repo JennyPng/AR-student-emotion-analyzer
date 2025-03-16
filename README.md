@@ -19,4 +19,3 @@ TODO
 - Pre-trained emotion detection model: https://github.com/atulapra/Emotion-detection
 - Live transcription with Whisper: https://github.com/gaborvecsei/whisper-live-transcription
 - Unity UI tutorial: https://www.youtube.com/watch?v=XOc71-Og0Kg
-- Unity web socket client: https://github.com/endel/NativeWebSocket

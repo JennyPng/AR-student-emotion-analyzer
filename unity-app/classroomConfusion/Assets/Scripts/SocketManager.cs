@@ -1,73 +1,134 @@
+// Unity Client (Unity C# Script - Attach to a GameObject)
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 using UnityEngine;
+using System.Collections.Generic;
+using Newtonsoft.Json; // Install via Unity Package Manager: Newtonsoft Json
 
-using NativeWebSocket;
-
-public class Connection : MonoBehaviour
+public class SocketClient : MonoBehaviour
 {
-    WebSocket websocket;
+    public string serverIP = "127.0.0.1";
+    public int serverPort = 65432;
 
-    // Start is called before the first frame update
-    async void Start()
+    private TcpClient client;
+    private NetworkStream stream;
+    private Thread clientReceiveThread;
+    private bool isRunning;
+    private List<string> receivedTextList = new List<string>();
+
+    void Start()
     {
-        websocket = new WebSocket("ws://localhost:3000");
+        ConnectToServer();
+    }
 
-        websocket.OnOpen += () =>
+    void ConnectToServer()
+    {
+        try
         {
-            Debug.Log("Connection open!");
-        };
-
-        websocket.OnError += (e) =>
+            client = new TcpClient(serverIP, serverPort);
+            stream = client.GetStream();
+            isRunning = true;
+            clientReceiveThread = new Thread(new ThreadStart(ReceiveData));
+            clientReceiveThread.IsBackground = true;
+            clientReceiveThread.Start();
+        }
+        catch (Exception e)
         {
-            Debug.Log("Error! " + e);
-        };
+            Debug.LogError("Socket error: " + e);
+        }
+    }
 
-        websocket.OnClose += (e) =>
+    void ReceiveData()
+    {
+        byte[] receiveBuffer = new byte[1024];
+        StringBuilder stringBuilder = new StringBuilder(); // Buffer for incomplete JSON
+
+        while (isRunning)
         {
-            Debug.Log("Connection closed!");
-        };
+            try
+            {
+                int bytesRead = stream.Read(receiveBuffer, 0, receiveBuffer.Length);
+                if (bytesRead > 0)
+                {
+                    string receivedData = Encoding.UTF8.GetString(receiveBuffer, 0, bytesRead);
+                    stringBuilder.Append(receivedData);
 
-        websocket.OnMessage += (bytes) =>
+                    string data = stringBuilder.ToString();
+
+                    if (data.Contains("\n")) // Check for end of JSON
+                    {
+                        string[] jsonStrings = data.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                        foreach (string jsonString in jsonStrings)
+                        {
+
+                            try
+                            {
+                                receivedTextList = JsonConvert.DeserializeObject<List<string>>(jsonString);
+                                if (receivedTextList != null && receivedTextList.Count > 0)
+                                {
+                                    foreach (string text in receivedTextList)
+                                    {
+                                        Debug.Log("Received text: " + text); // Print the received text
+                                    }
+                                }
+                                stringBuilder.Clear(); // Clear the buffer
+                            }
+                            catch (JsonException e)
+                            {
+                                Debug.LogError("JSON parsing error: " + e);
+                                // Handle the error, potentially by waiting for more data
+                            }
+                        }
+
+                    }
+
+                }
+            }
+            catch (SocketException socketException)
+            {
+                Debug.LogError("Socket exception: " + socketException);
+                break;
+            }
+            catch (System.IO.IOException ioException)
+            {
+                Debug.LogError("IO exception: " + ioException);
+                break;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Receive error: " + e);
+                break;
+            }
+        }
+    }
+
+    void OnApplicationQuit()
+    {
+        isRunning = false;
+        if (clientReceiveThread != null && clientReceiveThread.IsAlive)
         {
-            Debug.Log("OnMessage!");
-            Debug.Log(bytes);
+            clientReceiveThread.Join();
+        }
 
-            // getting the message as a string
-            // var message = System.Text.Encoding.UTF8.GetString(bytes);
-            // Debug.Log("OnMessage! " + message);
-        };
+        if (stream != null)
+        {
+            stream.Close();
+        }
+        if (client != null)
+        {
+            client.Close();
+        }
+    }
 
-        // Keep sending messages at every 0.3s
-        InvokeRepeating("SendWebSocketMessage", 0.0f, 0.3f);
-
-        // waiting for messages
-        await websocket.Connect();
+    public List<string> GetReceivedTextList()
+    {
+        return receivedTextList;
     }
 
     void Update()
     {
-#if !UNITY_WEBGL || UNITY_EDITOR
-        websocket.DispatchMessageQueue();
-#endif
+
     }
-
-    async void SendWebSocketMessage()
-    {
-        if (websocket.State == WebSocketState.Open)
-        {
-            // Sending bytes
-            await websocket.Send(new byte[] { 10, 20, 30 });
-
-            // Sending plain text
-            await websocket.SendText("plain text message");
-        }
-    }
-
-    private async void OnApplicationQuit()
-    {
-        await websocket.Close();
-    }
-
 }

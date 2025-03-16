@@ -1,34 +1,29 @@
-from flask import Flask
-from flask_socketio import SocketIO
+import socket
 import time
-import threading
-import jsonify
-from flask_cors import CORS
+import json
 
-app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
-CORS(app)
+def run_server(host='127.0.0.1', port=65432):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((host, port))
+        s.listen()
+        print(f"Server listening on {host}:{port}")
+        conn, addr = s.accept()
+        with conn:
+            print(f"Connected by {addr}")
+            while True:
+                data_list = ["Text 1", "Text 2", "Text 3", "Another Text", "More text"] # Example list
+                json_data = json.dumps(data_list) + "\n" # Add newline for easier parsing on client
+                encoded_data = json_data.encode('utf-8')
+                try:
+                    # print("sending")
+                    conn.sendall(encoded_data)
+                    time.sleep(0.1) # Send data at approximately 10Hz
+                except (ConnectionResetError, BrokenPipeError):
+                    print("Client disconnected.")
+                    break
+                except Exception as e:
+                    print(f"Error: {e}")
+                    break
 
-@app.route('/')
-def index():
-    return "Server is running"
-
-# Stream text to Unity every second
-def stream_text():
-    while True:
-        text = f"Current time: {time.strftime('%H:%M:%S')}"
-        socketio.emit('update_text', {'text': text})  # Send to Unity client
-        time.sleep(1)
-
-@socketio.on('connect')
-def handle_connect():
-    print('Unity client connected')
-
-if __name__ == '__main__':
-    # Start text streaming in a separate thread
-    thread = threading.Thread(target=stream_text)
-    thread.daemon = True
-    thread.start()
-
-    socketio.run(app, host='0.0.0.0', port=5000)
-    
+if __name__ == "__main__":
+    run_server()
