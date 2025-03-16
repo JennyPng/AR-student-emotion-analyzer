@@ -10,6 +10,7 @@ import threading
 import global_vars
 
 import emotion
+import server
 
 # AUDIO SETTINGS
 MAX_AUDIO_QUEUE = 7 # max length audio data to process together
@@ -96,6 +97,8 @@ if __name__ == "__main__":
 
     transcription_thread = threading.Thread(target=transcribe_audio)
     transcription_thread.start()
+    
+    server.run_server()
     
     try:
         audio_thread.join()

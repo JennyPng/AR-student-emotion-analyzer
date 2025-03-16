@@ -1,11 +1,13 @@
 You are assisting an instructor during their lecture. You are given the lecture transcript so far.
 Students are particularly confused about the most recent topics. Give 3 short, specific and distinct
-questions students might be having about the lecture.
+questions students might be having about the lecture, as an array of strings.
 
-Good example questions:
-```
-- How does measuring light over a surface with an array of cameras differs from using a single camera?
-- How do aperture grids filter out unneeded rays to improve resolution?
-```
+You MUST respond in this EXACT json format with NO ADDITIONAL WORDS.
 
-You must respond in bullet points. This is the transcript: 
+Good example response:
+```
+{
+  "confusing_topics": ["How does measuring light over a surface with an array of cameras differs from using a single camera?", "How do aperture grids filter out unneeded rays to improve resolution?", "Why is pass-through so complex?"]
+}
+```
+This is the transcript: 

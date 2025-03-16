@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+import json
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -22,4 +23,18 @@ def clarify_lecture(transcript):
         prompt=prompt,
         max_tokens=100
     )
-    return response.choices[0].text
+    response = response.choices[0].text
+    print(response)
+    # parse json
+    try:
+        data = json.loads(response)
+        print(data) 
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        data = {'confusing_topics': []}
+
+    return data
+
+if __name__ == "__main__":
+    data = clarify_lecture("linear programming")
+    print(data)

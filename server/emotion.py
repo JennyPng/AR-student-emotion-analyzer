@@ -10,6 +10,8 @@ from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
 import global_vars
 import ai
+from ai import json
+import server
      
 # load pretrained models
 face_model = YOLO("yolov11n-face.pt")
@@ -46,7 +48,7 @@ rolling_stats = {
 }
 WINDOW_SIZE = 10
 
-def get_confusing_topics(timestamp):
+def get_confusing_topics(timestamp, sampled_mean):
     spike_timestamp = global_vars.pd.Timestamp(timestamp)
                             
     start_time = spike_timestamp - timedelta(minutes=5)
@@ -58,9 +60,19 @@ def get_confusing_topics(timestamp):
 
     # look up lecture content, trigger gpt pipeline, send data to unity
     gpt_response = ai.clarify_lecture(relevant_lecture_content)
-    print(gpt_response)
+    print(f"GPT json response is: {gpt_response}")
 
-    return gpt_response
+    data = {
+        "confusion": sampled_mean,
+        "confusing_topics": gpt_response['confusing_topics']
+    }
+
+    json_data = json.dumps(data) + "\n" # Add newline
+    # encoded_data = json_data.encode('utf-8')
+    # print(f"encoded data: {encoded_data}")
+
+    # return encoded_data
+    return json_data
 
 def analyze_emotions():
     # webcam, 0 for default
@@ -131,8 +143,8 @@ def analyze_emotions():
                         if (sampled_mean > baseline_stats['baseline_negative_avg'] + 1.5 * std):
                             # spike detected, get lecture content from past 30 seconds
                             print("SPIKE DETECTED")
-
-                            get_confusing_topics(truncated_timestamp)
+                            data = get_confusing_topics(truncated_timestamp, sampled_mean)
+                            global_vars.DATA_TO_SEND = data
 
                 cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
