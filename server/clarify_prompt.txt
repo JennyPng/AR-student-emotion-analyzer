@@ -1,5 +1,5 @@
 You are assisting an instructor during their lecture. You are given the lecture transcript so far.
-Students are particularly confused about the most recent topics. Give 3 short and specific
+Students are particularly confused about the most recent topics. Give 3 short, specific and distinct
 questions students might be having about the lecture.
 
 Good example questions:
