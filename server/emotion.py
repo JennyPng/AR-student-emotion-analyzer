@@ -46,7 +46,7 @@ BASELINE_DURATION = 20 # time for calibration
 rolling_stats = {
      'rolling_negative_faces': []
 }
-WINDOW_SIZE = 10
+WINDOW_SIZE = 5
 
 def get_confusing_topics(timestamp, sampled_mean):
     spike_timestamp = global_vars.pd.Timestamp(timestamp)
@@ -67,12 +67,12 @@ def get_confusing_topics(timestamp, sampled_mean):
         "confusing_topics": gpt_response['confusing_topics']
     }
 
-    json_data = json.dumps(data) + "\n" # Add newline
+    # json_data = json.dumps(data) + "\n" # Add newline
     # encoded_data = json_data.encode('utf-8')
     # print(f"encoded data: {encoded_data}")
 
     # return encoded_data
-    return json_data
+    return data
 
 def analyze_emotions():
     # webcam, 0 for default

@@ -1,17 +1,15 @@
 using System;
+using System.Collections.Generic;
 
 [Serializable] 
 public class ConfusionData
 {
-    public float confusion;
-    public string[] confusing_topics;
+    public float confusion { get; set; }
+    public List<string> confusing_topics { get; set; }
 
-    public ConfusionData(float confusion, string[] confusingTopics)
-    {
-        this.confusion = confusion;
-        this.confusing_topics = confusingTopics;
-    }
     public ConfusionData()
     {
+        confusion = 0;
+        confusing_topics = new List<string>();
     }
 }
