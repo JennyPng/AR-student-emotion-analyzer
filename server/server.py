@@ -21,7 +21,6 @@ def send_data():
         return encoded_data
     else:
         data_to_send = global_vars.DATA_TO_SEND
-        json_data.encode('utf-8')
         json_data = json.dumps(data_to_send) + "\n"  # Add newline for easier parsing on client
         encoded_data = json_data.encode('utf-8')
         return encoded_data
