@@ -17,45 +17,42 @@ public class ApiClient : MonoBehaviour
 
     IEnumerator GetData()
     {
-        using (UnityWebRequest request = UnityWebRequest.Get(serverUrl))
+        while (true)
         {
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError ||
-                request.result == UnityWebRequest.Result.ProtocolError)
+            using (UnityWebRequest request = UnityWebRequest.Get(serverUrl))
             {
-                Debug.LogError("Error: " + request.error);
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.ConnectionError ||
+                    request.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    Debug.LogError("Error: " + request.error);
+                }
+                else
+                {
+                    try
+                    {
+                        string jsonString = request.downloadHandler.text;
+                        ConfusionData confusionData = JsonConvert.DeserializeObject<ConfusionData>(jsonString);
+
+                        Debug.Log($"Confusion Level: {confusionData.confusion}");
+                        foreach (string topic in confusionData.confusing_topics)
+                        {
+                            Debug.Log($"Confusing Topic: {topic}");
+                        }
+
+                        // Update the UI through the TextManager
+                        if (confusionData != null)
+                        {
+                            textManager.updateConfusionData(confusionData);
+                        }
+                    }
+                    catch (JsonException e)
+                    {
+                        Debug.LogError($"JSON parsing error: {e.Message}");
+                    }
+                }
             }
-            else
-            {
-                try
-                {
-                    string jsonString = request.downloadHandler.text;
-                    ConfusionData confusionData = JsonConvert.DeserializeObject<ConfusionData>(jsonString);
-
-                    Debug.Log($"Confusion Level: {confusionData.confusion}");
-                    foreach (string topic in confusionData.confusing_topics)
-                    {
-                        Debug.Log($"Confusing Topic: {topic}");
-                    }
-
-                    // Update the UI through the TextManager
-                    if (confusionData != null)
-                    {
-                        textManager.updateConfusionData(confusionData);
-                    }
-                }
-                catch (JsonException e)
-                {
-                    Debug.LogError($"JSON parsing error: {e.Message}");
-                }
-
-            //Debug.Log("Response: " + request.downloadHandler.text);
-            //// Deserialize JSON response
-            //DataResponse response = JsonConvert.DeserializeObject<DataResponse>(request.downloadHandler.text);
-            //Debug.Log("Message: " + response.message);
-            //Debug.Log("Value: " + response.value);
-        }
         }
     }
 }
