@@ -23,10 +23,7 @@ public class SocketClient : MonoBehaviour
     private TcpClient client;
     private NetworkStream stream;
 
-    //private Thread clientReceiveThread;
-
     private bool isRunning;
-    //private List<string> receivedTextList = new List<string>();
 
     private TextManager textManager;
 
@@ -47,13 +44,11 @@ public class SocketClient : MonoBehaviour
             isRunning = true;
 
             StartCoroutine(ReceiveData());
-            //clientReceiveThread = new Thread(new ThreadStart(ReceiveData));
-            //clientReceiveThread.IsBackground = true;
-            //clientReceiveThread.Start();
         }
         catch (Exception e)
         {
             Debug.LogError("Socket error: " + e);
+            Invoke(nameof(ConnectToServer), 3f);
         }
     }
 
@@ -88,8 +83,6 @@ public class SocketClient : MonoBehaviour
 
                                 if (confusionData != null)
                                 {
-                                    // Enqueue the update to run on the main thread
-                                    //UnityMainThreadDispatcher.Enqueue(() => textManager.updateConfusionData(confusionData));
                                     textManager.updateConfusionData(confusionData);
                                 }
 
@@ -123,29 +116,6 @@ public class SocketClient : MonoBehaviour
         }
         yield return null;
     }
-
-    //void OnApplicationQuit()
-    //{
-    //    isRunning = false;
-    //    if (clientReceiveThread != null && clientReceiveThread.IsAlive)
-    //    {
-    //        clientReceiveThread.Join();
-    //    }
-
-    //    if (stream != null)
-    //    {
-    //        stream.Close();
-    //    }
-    //    if (client != null)
-    //    {
-    //        client.Close();
-    //    }
-    //}
-
-    //public List<string> GetReceivedTextList()
-    //{
-    //    return receivedTextList;
-    //}
 
     void Update()
     {
