@@ -51,7 +51,7 @@ WINDOW_SIZE = 5
 def get_confusing_topics(timestamp, sampled_mean):
     spike_timestamp = global_vars.pd.Timestamp(timestamp)
                             
-    start_time = spike_timestamp - timedelta(minutes=5)
+    start_time = spike_timestamp - timedelta(minutes=1)
     end_time = spike_timestamp
 
     # Get the relevant lecture content

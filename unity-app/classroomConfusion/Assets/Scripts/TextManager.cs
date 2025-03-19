@@ -38,7 +38,7 @@ public class TextManager : MonoBehaviour
         notify = false;
         notifyStart = -1;
         confusionData = new ConfusionData(); 
-        confusionText.text = confusionData.confusion.ToString();
+        confusionText.text = "Confusion Levels: " + confusionData.confusion.ToString();
     }
 
     public void updateConfusionData(ConfusionData newData)
@@ -63,7 +63,7 @@ public class TextManager : MonoBehaviour
             }
             feedbackText.text = sb.ToString();
         }
-        confusionText.text = confusionData.confusion.ToString();
+        confusionText.text = "Confusion Levels: " + confusionData.confusion.ToString();
     }
 
     // Update is called once per frame
