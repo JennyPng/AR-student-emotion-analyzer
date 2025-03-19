@@ -9,11 +9,10 @@ to help the instructor understand how to adjust their teaching pace or explanati
 You MUST respond in this EXACT JSON format with NO ADDITIONAL WORDS.
 
 Good example response for a lecture about AI and art:
-```
 {
   "confusing_topics": ["Why is generative art unethical?", "How are generative AI tools trained?"]
 }
-```
+
 DO NOT just copy the example questions, only put in content relevant to the following lecture transcript.
 FOCUS the questions on the last few sentences of the transcript, and only use the rest for context.
 Again, you MUST respond in the EXACT json format.

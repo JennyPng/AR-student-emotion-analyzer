@@ -40,7 +40,7 @@ baseline_stats = {
     'baseline_negative_avg': -1,
     'start_time': time.time()
 }
-BASELINE_DURATION = 20 # time for calibration
+BASELINE_DURATION = 30 # time for calibration
 
 # rolling window avg
 rolling_stats = {
@@ -145,7 +145,6 @@ def analyze_emotions():
                             print("SPIKE DETECTED")
                             data = get_confusing_topics(truncated_timestamp, sampled_mean)
                             server.update_data(data)
-                            # global_vars.DATA_TO_SEND = data
 
                 cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
