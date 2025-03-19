@@ -55,7 +55,8 @@ def get_confusing_topics(timestamp, sampled_mean):
     end_time = spike_timestamp
 
     # Get the relevant lecture content
-    relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
+    with global_vars.data_lock:
+        relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
     relevant_lecture_content = ' '.join(relevant_lecture_content['transcript_chunk'].tolist())
 
     # look up lecture content, trigger gpt pipeline, send data to unity
@@ -131,7 +132,8 @@ def analyze_emotions():
 
                         print(f"baseline: {baseline_stats['baseline_negative_avg']}, sampled mean: {sampled_mean}, std: {std}")
 
-                        global_vars.confusion_df.loc[truncated_timestamp] = [sampled_mean]
+                        with global_vars.data_lock:
+                            global_vars.confusion_df.loc[truncated_timestamp] = [sampled_mean]
                         print("-" * 80)
                         print(global_vars.confusion_df)
                         print("-" * 80)
@@ -142,7 +144,8 @@ def analyze_emotions():
                             # spike detected, get lecture content from past 30 seconds
                             print("SPIKE DETECTED")
                             data = get_confusing_topics(truncated_timestamp, sampled_mean)
-                            global_vars.DATA_TO_SEND = data
+                            server.update_data(data)
+                            # global_vars.DATA_TO_SEND = data
 
                 cv2.putText(frame, emotion, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 

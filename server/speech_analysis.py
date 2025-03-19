@@ -81,7 +81,8 @@ def transcribe_audio():
                 timestamp = datetime.datetime.now()
                 truncated_timestamp = timestamp.replace(microsecond=0)
 
-                global_vars.lecture_df.loc[truncated_timestamp] = [transcription]
+                with global_vars.data_lock:
+                    global_vars.lecture_df.loc[truncated_timestamp] = [transcription]
 
                 # for multithreading, signals that enqueued task was processed
                 audio_queue.task_done()

@@ -1,4 +1,7 @@
 import pandas as pd
+import threading 
+
+data_lock = threading.Lock()
 
 # map timestamp to avg confusion level
 confusion_df = pd.DataFrame(columns=['confusion_level'])
