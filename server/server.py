@@ -21,7 +21,7 @@ def run_server(host='0.0.0.0', port=65432):
                 try:
                     # print("sending")
                     conn.sendall(encoded_data)
-                    time.sleep(0.1) # Send data at approximately 10Hz
+                    time.sleep(0.5) # Send data
                 except (ConnectionResetError, BrokenPipeError):
                     print("Client disconnected.")
                     break

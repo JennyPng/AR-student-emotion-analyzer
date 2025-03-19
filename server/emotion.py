@@ -62,16 +62,14 @@ def get_confusing_topics(timestamp, sampled_mean):
     gpt_response = ai.clarify_lecture(relevant_lecture_content)
     print(f"GPT json response is: {gpt_response}")
 
+    confusing_topics = []
+    if 'confusing_topics' in gpt_response:
+        confusing_topics = gpt_response['confusing_topics']
+
     data = {
         "confusion": sampled_mean,
-        "confusing_topics": gpt_response['confusing_topics']
+        "confusing_topics": confusing_topics
     }
-
-    # json_data = json.dumps(data) + "\n" # Add newline
-    # encoded_data = json_data.encode('utf-8')
-    # print(f"encoded data: {encoded_data}")
-
-    # return encoded_data
     return data
 
 def analyze_emotions():
