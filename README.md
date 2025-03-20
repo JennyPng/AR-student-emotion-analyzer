@@ -2,13 +2,12 @@
 Understanding where students struggle is crucial in providing a good educational experience,
 yet many students suffer in silence, making it difficult for instructors to adjust.
 
-We propose a context-aware AR system that utilizes real-time computer vision to analyze student engagement
-and understanding, dynamically providing suggestions on how to adjust the teaching pace and
-focus areas.
+We propose a real-time system that integrates facial emotion classification, speech-to-text transcription, and augmented reality to provide instructors with immediate feedback during live lectures when students are confused. 
 
 ## implementation
 <img src="VR Diagram.png" alt="pipeline diagram"></img>
-
+<img src="sad.png" width=200em alt="pipeline diagram"></img>
+<img src="sc.png" width=200em alt="pipeline diagram"></img>
 ## server setup
 `pip install -r ./requirements.txt`
 
