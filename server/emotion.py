@@ -46,7 +46,7 @@ BASELINE_DURATION = 30 # time for calibration
 rolling_stats = {
      'rolling_negative_faces': []
 }
-WINDOW_SIZE = 5
+WINDOW_SIZE = 12
 
 def get_confusing_topics(timestamp, sampled_mean):
     spike_timestamp = global_vars.pd.Timestamp(timestamp)
