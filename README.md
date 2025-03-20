@@ -6,8 +6,8 @@ We propose a real-time system that integrates facial emotion classification, spe
 
 ## implementation
 <img src="VR Diagram.png" alt="pipeline diagram"></img>
-<img src="sad.png" width=200em alt="pipeline diagram"></img>
-<img src="sc.png" width=200em alt="pipeline diagram"></img>
+<img src="sad.png" width=400em alt="pipeline diagram"></img>
+<img src="sc.png" width=400em alt="pipeline diagram"></img>
 ## server setup
 `pip install -r ./requirements.txt`
 
