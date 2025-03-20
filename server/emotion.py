@@ -59,6 +59,8 @@ def get_confusing_topics(timestamp, sampled_mean):
         relevant_lecture_content = global_vars.lecture_df.loc[start_time:end_time]
     relevant_lecture_content = ' '.join(relevant_lecture_content['transcript_chunk'].tolist())
 
+    print(f"Pulled lecture transcript ^_^: {relevant_lecture_content}")
+
     # look up lecture content, trigger gpt pipeline, send data to unity
     gpt_response = ai.clarify_lecture(relevant_lecture_content)
     print(f"GPT json response is: {gpt_response}")
