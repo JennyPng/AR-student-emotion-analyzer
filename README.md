@@ -6,13 +6,15 @@ We propose a context-aware AR system that utilizes real-time computer vision to 
 and understanding, dynamically providing suggestions on how to adjust the teaching pace and
 focus areas.
 
+## implementation
+<img src="VR Diagram.png" alt="pipeline diagram"></img>
+
 ## server setup
 `pip install -r ./requirements.txt`
 
 ## unity setup
-TODO
-
-## implementation
+- Set up Meta Quest settings
+- Set up ngrok domain and change serverUrl in SocketManager.cs
 
 ## resources + references
 - YOLO for face detection: https://github.com/akanametov/yolo-face?tab=readme-ov-file
