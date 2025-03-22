@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 public class ApiClient : MonoBehaviour
 {
-    private string serverUrl = "https://bluejay-novel-ghoul.ngrok-free.app/data"; // Ngrok URL
+    private string serverUrl = "https://mako-pleasing-filly.ngrok-free.app/data"; // Ngrok URL
     private TextManager textManager;
 
     // Start is called before the first frame update

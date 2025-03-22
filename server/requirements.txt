@@ -2,6 +2,7 @@ Flask==3.0.3
 flask_cors
 flask-socketio
 jsonify
+openai
 
 # Tensorflow
 tensorflow
