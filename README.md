@@ -6,6 +6,8 @@ We propose a real-time system that integrates emotion classification, live speec
 
 ## implementation
 <img src="VR Diagram.png" alt="pipeline diagram"></img>
+<img src="sad.png" width=400em alt="pipeline diagram"></img>
+<img src="sc.png" width=400em alt="pipeline diagram"></img>
 The computer vision pipeline runs YOLOv11 to detect faces, and a CNN to constantly predict
 emotions of all students. A baseline average of negative emotions is calibrated at the beginning of the lecture.
 When a spike of 1.5 standard deviations above the baseline is detected, we consider students to be particularly confused. 
@@ -15,8 +17,6 @@ data is stored indexed by timestamp. When there is a spike in confusion, the cor
 is retrieved and passed with a prompt to GPT to determine which specific topics in the lecture may be what is confusing.
 The generated response is then streamed to the Unity application to be displayed to the instructor, providing live feedback
 during teaching.
-<img src="sad.png" width=400em alt="pipeline diagram"></img>
-<img src="sc.png" width=400em alt="pipeline diagram"></img>
 
 ## server setup
 `pip install -r ./requirements.txt`
